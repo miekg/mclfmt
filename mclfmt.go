@@ -11,6 +11,8 @@ import (
 	"github.com/purpleidea/mgmt/lang/parser"
 )
 
+var flagAst = flag.Bool("ast", false, "Print the AST to standard output.")
+
 func main() {
 	flag.Parse()
 
@@ -32,7 +34,9 @@ func main() {
 	lw := &LineWriter{Indent: 0, Start: true, b: &bytes.Buffer{}}
 
 	Print(prog, lw, Option{})
-	fmt.Println(lw.String())
+	if !*flagAst {
+		fmt.Println(lw.String())
+	}
 }
 
 type Option struct {

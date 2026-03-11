@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/purpleidea/mgmt/lang/ast"
@@ -12,6 +14,11 @@ import (
 )
 
 func Print(a any, w *LineWriter, opt Option) {
+	if *flagAst {
+		os.Stdout.Write(bytes.Repeat([]byte("\t"), w.Indent))
+		fmt.Fprintf(os.Stdout, "%T{%[1]s}\n", a)
+	}
+
 	switch a := a.(type) {
 	case *ast.StmtProg:
 		StmtProg(a, w, opt)
