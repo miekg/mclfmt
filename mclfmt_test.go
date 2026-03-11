@@ -126,6 +126,27 @@ func TestPrint(t *testing.T) {
 			$foo = $fn()	# hello
 			`,
 		},
+		{
+			name: "res meta stmt",
+			code: `
+			test "t1" {
+				Meta:noop => true,
+				Meta:delay => true ?: 42,
+			}
+			test "t2" {
+				Meta:limit => 0.45,
+				Meta:burst => 4,
+			}
+			test "t3" {
+				Meta:noop => true, # meta params can be combined
+				Meta => struct{
+					poll => 5,
+					retry => 3,
+					sema => ["foo:1", "bar:3",],
+				},
+			}
+			`,
+		},
 	}
 
 	re := regexp.MustCompile(`(?m)^[ \t]{3}`)
