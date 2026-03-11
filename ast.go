@@ -214,18 +214,15 @@ func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
 	opt.DropSpace = true
 	io.WriteString(w, "(")
 
+	opt.DropSpace = true
 	for i, arg := range a.Args {
-		opt.DropSpace = false
-		if i == 0 {
-			opt.DropSpace = true
-		}
-		fmt.Printf("%T\n", arg)
 		Print(arg, w, opt)
 		if i < len(a.Args)-1 {
 			fmt.Fprint(w, ",")
 		}
 	}
 	fmt.Fprint(w, ")")
+	opt.DropSpace = false
 
 	if a.Return != nil {
 		fmt.Fprintf(w, " %s", a.Return)
@@ -255,17 +252,15 @@ func ExprCall(a *ast.ExprCall, w *LineWriter, opt Option) {
 			fmt.Fprintf(w, " %s(", a.Name)
 		}
 
+		opt.DropSpace = true
 		for i, arg := range a.Args {
-			opt.DropSpace = false
-			if i == 0 {
-				opt.DropSpace = true
-			}
 			Print(arg, w, opt)
 			if i < len(a.Args)-1 {
 				fmt.Fprint(w, ",")
 			}
 		}
 		fmt.Fprint(w, ")")
+		opt.DropSpace = false
 	}
 }
 
@@ -297,16 +292,13 @@ func ExprList(a *ast.ExprList, w *LineWriter, opt Option) {
 	} else {
 		io.WriteString(w, " [")
 	}
-	for i, e := range a.Elements {
-		opt.DropSpace = false
-		if i == 0 {
-			opt.DropSpace = true
-		}
+	opt.DropSpace = true
+	for _, e := range a.Elements {
 		Print(e, w, opt)
 		fmt.Fprint(w, ",")
 	}
-
 	io.WriteString(w, "]")
+	opt.DropSpace = false
 }
 
 func InterfacesArg(a *interfaces.Arg, w *LineWriter, opt Option) {
