@@ -61,6 +61,8 @@ func Print(a any, w *LineWriter, opt Option) {
 		ExprMapKV(a, w, opt)
 	case *ast.ExprList:
 		ExprList(a, w, opt)
+	case *ast.ExprIf:
+		ExprIf(a, w, opt)
 
 	case *interfaces.Arg:
 		InterfacesArg(a, w, opt)
@@ -192,10 +194,30 @@ func StmtResField(a *ast.StmtResField, w *LineWriter, opt Option) {
 
 func StmtClass(a *ast.StmtClass, w *LineWriter, opt Option) {
 	if opt.DropSpace {
-		fmt.Fprintf(w, "class %s {\n", a.Name)
+		fmt.Fprintf(w, "class %s", a.Name)
 	} else {
-		fmt.Fprintf(w, "class %s {\n", a.Name)
+		fmt.Fprintf(w, " class %s", a.Name)
 	}
+
+	opt.DropSpace = false
+	if a.Args != nil {
+		io.WriteString(w, "(")
+		for i, arg := range a.Args {
+			if i == 0 {
+				opt.DropSpace = true
+			} else {
+				opt.DropSpace = false
+			}
+			Print(arg, w, opt)
+			if i < len(a.Args)-1 {
+				fmt.Fprint(w, ",")
+			}
+		}
+		fmt.Fprint(w, ")")
+		opt.DropSpace = false
+
+	}
+	io.WriteString(w, " {\n")
 
 	w.Indent++
 	// always StmtProg?
@@ -208,7 +230,30 @@ func StmtClass(a *ast.StmtClass, w *LineWriter, opt Option) {
 }
 
 func StmtInclude(a *ast.StmtInclude, w *LineWriter, opt Option) {
-	fmt.Fprintf(w, "include %s\n", a.Name)
+	fmt.Fprintf(w, "include %s", a.Name)
+	opt.DropSpace = false
+	if a.Args != nil {
+		io.WriteString(w, "(")
+		for i, arg := range a.Args {
+			if i == 0 {
+				opt.DropSpace = true
+			} else {
+				opt.DropSpace = false
+			}
+			Print(arg, w, opt)
+			if i < len(a.Args)-1 {
+				fmt.Fprint(w, ",")
+			}
+		}
+		fmt.Fprint(w, ")")
+		opt.DropSpace = false
+	}
+
+	if a.Alias != "" {
+		fmt.Fprintf(w, " as %s", a.Alias)
+	}
+
+	io.WriteString(w, "\n")
 }
 
 func StmtImport(a *ast.StmtImport, w *LineWriter, opt Option) {
@@ -275,8 +320,8 @@ func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
 		fmt.Fprintf(w, " %s", a.Return)
 	}
 
-	w.Indent++
 	io.WriteString(w, " {\n")
+	w.Indent++
 	Print(a.Body, w, opt)
 	w.Indent--
 	io.WriteString(w, "\n") // TODO(miek): adds extra newline in nested functions
@@ -380,6 +425,34 @@ func ExprList(a *ast.ExprList, w *LineWriter, opt Option) {
 	}
 	opt.DropSpace = false
 	io.WriteString(w, "]")
+}
+
+func ExprIf(a *ast.ExprIf, w *LineWriter, opt Option) {
+	if opt.DropSpace {
+		io.WriteString(w, "if")
+		opt.DropSpace = false
+	} else {
+		io.WriteString(w, " if")
+	}
+
+	Print(a.Condition, w, opt)
+
+	io.WriteString(w, " {\n")
+	w.Indent++
+	Print(a.ThenBranch, w, opt)
+	w.Indent--
+	io.WriteString(w, "\n")
+	io.WriteString(w, "}")
+	if a.ElseBranch == nil {
+		return
+	}
+
+	io.WriteString(w, " else {\n")
+	w.Indent++
+	Print(a.ElseBranch, w, opt)
+	w.Indent--
+	io.WriteString(w, "\n")
+	io.WriteString(w, "}")
 }
 
 func InterfacesArg(a *interfaces.Arg, w *LineWriter, opt Option) {
