@@ -84,9 +84,12 @@ func StmtRes(a *ast.StmtRes, w *LineWriter, opt Option) {
 
 	Print(a.Name, w, opt)
 
-	io.WriteString(w, " {\n")
+	io.WriteString(w, " {") // with no contents this stays on a single line
 	w.Indent++
-	for _, c := range a.Contents {
+	for i, c := range a.Contents {
+		if i == 0 {
+			io.WriteString(w, "\n")
+		}
 		Print(c, w, opt)
 		io.WriteString(w, ",\n")
 	}
