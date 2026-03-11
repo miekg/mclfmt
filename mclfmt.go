@@ -36,8 +36,9 @@ func main() {
 }
 
 type Option struct {
-	DropQuote bool // Print ExprStr without quotes.
-	DropSpace bool // Print any without a starting space.
+	DropQuote bool   // Print ExprStr without quotes.
+	DropSpace bool   // Print any without a starting space.
+	Func      string // When set ExprFunc was called via StmtFunc, if not, then directly via ExprFunc.
 }
 
 // LineWrtiter is a writer that ignores a single space written as the first

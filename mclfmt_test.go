@@ -2,7 +2,8 @@ package main
 
 import (
 	"bytes"
-	"fmt"
+	"io"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -113,8 +114,21 @@ func TestPrint(t *testing.T) {
 			$out = iter.map([1,2,3,], $fn)
 			`,
 		},
+		{
+			name: "simple nested function 1",
+			code: `
+			func funcgen() {	# returns a function expression
+				func() {
+					"hello"
+				}
+			}
+			$fn = funcgen()
+			$foo = $fn()	# hello
+			`,
+		},
 	}
 
+	re := regexp.MustCompile(`(?m)^[ \t]{3}`)
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			prog, err := parser.LexParse(strings.NewReader(tc.code))
@@ -124,7 +138,16 @@ func TestPrint(t *testing.T) {
 			lw := &LineWriter{Indent: 0, Start: true, b: &bytes.Buffer{}}
 
 			Print(prog, lw, Option{})
-			fmt.Println(lw.String())
+			t.Log("*in*", re.ReplaceAllString(tc.code, ""))
+			t.Log("*out*\n", lw.String())
 		})
+	}
+}
+
+func TestLineWriter(t *testing.T) {
+	lw := &LineWriter{Indent: 0, Start: true, b: &bytes.Buffer{}}
+	io.WriteString(lw, "bla")
+	if lw.String() != "bla" {
+		t.Fatalf("expected %s, got %s", "bla", lw.String())
 	}
 }

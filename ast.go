@@ -74,7 +74,10 @@ func StmtBind(a *ast.StmtBind, w *LineWriter, opt Option) {
 	} else {
 		fmt.Fprintf(w, " $%s =", a.Ident)
 	}
+	opt.DropSpace = false
 	Print(a.Value, w, opt)
+
+	io.WriteString(w, "\n")
 }
 
 func StmtRes(a *ast.StmtRes, w *LineWriter, opt Option) {
@@ -83,6 +86,7 @@ func StmtRes(a *ast.StmtRes, w *LineWriter, opt Option) {
 	} else {
 		fmt.Fprintf(w, " %s", a.Kind)
 	}
+	opt.DropSpace = false
 
 	Print(a.Name, w, opt)
 
@@ -207,10 +211,20 @@ func StmtImport(a *ast.StmtImport, w *LineWriter, opt Option) {
 
 func StmtFunc(a *ast.StmtFunc, w *LineWriter, opt Option) {
 	fmt.Fprintf(w, "func %s", a.Name)
+	opt.Func = a.Name
 	Print(a.Func, w, opt)
 }
 
 func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
+	if opt.Func == "" { // No StmtFunc seen
+		if opt.DropSpace {
+			io.WriteString(w, "func")
+		} else {
+			io.WriteString(w, " func")
+		}
+	}
+	opt.Func = ""
+	opt.DropSpace = false
 	io.WriteString(w, "(")
 
 	for i, arg := range a.Args {
@@ -235,7 +249,8 @@ func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
 	io.WriteString(w, " {\n")
 	Print(a.Body, w, opt)
 	w.Indent--
-	io.WriteString(w, " \n}\n")
+	io.WriteString(w, "\n") // TODO(miek): adds extra newline in nested functions
+	io.WriteString(w, "}\n")
 }
 
 func ExprCall(a *ast.ExprCall, w *LineWriter, opt Option) {
