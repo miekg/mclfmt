@@ -13,7 +13,10 @@ import (
 	"github.com/purpleidea/mgmt/lang/interfaces"
 )
 
-var Import = false
+var (
+	Import  = false
+	ResEdge = false
+)
 
 func Print(a any, w *LineWriter, opt Option) {
 	if *flagAst {
@@ -24,9 +27,17 @@ func Print(a any, w *LineWriter, opt Option) {
 	// Extra layout options
 
 	// Import ended
-	if _, ok := a.(*ast.StmtImport); !ok && Import {
-		Import = false
-		w.ForceNewline()
+	switch a.(type) {
+	case *ast.StmtImport:
+		if Import {
+			Import = false
+			w.ForceNewline()
+		}
+	case *ast.StmtResEdge:
+	case *ast.StmtEdgeHalf:
+	case *ast.ExprStr:
+	default:
+		ResEdge = false
 	}
 
 	switch a := a.(type) {
@@ -54,7 +65,11 @@ func Print(a any, w *LineWriter, opt Option) {
 	case *ast.StmtResMeta:
 		StmtResMeta(a, w, opt)
 	case *ast.StmtResEdge:
+		if !ResEdge {
+			w.ForceNewline()
+		}
 		StmtResEdge(a, w, opt)
+		ResEdge = true
 	case *ast.StmtResCollect:
 		StmtResCollect(a, w, opt)
 	case *ast.StmtIf:
