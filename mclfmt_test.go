@@ -55,6 +55,15 @@ func TestPrint(t *testing.T) {
 			Test["t1"].foosend -> Test["t2"].barrecv
 			`,
 		},
+		{
+			name: "one map",
+			code: `
+			$somemap = {
+				"foo" => "foo1",
+				"bar" => "bar1",
+			}
+			`,
+		},
 	}
 
 	for _, tc := range testcases {

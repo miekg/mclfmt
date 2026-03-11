@@ -2,10 +2,11 @@ module github.com/miekg/mclfmt
 
 go 1.26.1
 
-require github.com/purpleidea/mgmt v0.0.0-20260308003956-94aaf2ef716b
+require github.com/purpleidea/mgmt v0.0.0-20260219152910-11cd5dc34194
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
+	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Jeffail/gabs/v2 v2.7.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.1.5 // indirect
@@ -78,7 +79,7 @@ require (
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/serf v0.10.2 // indirect
-	github.com/hetznercloud/hcloud-go/v2 v2.36.0 // indirect
+	github.com/hetznercloud/hcloud-go v1.59.2 // indirect
 	github.com/insomniacslk/dhcp v0.0.0-20250109001534-8abf58130905 // indirect
 	github.com/jacobweinstock/iamt v0.0.0-20260123165119-f91c8db551e5 // indirect
 	github.com/jacobweinstock/registrar v0.4.7 // indirect
@@ -171,6 +172,7 @@ require (
 	google.golang.org/grpc v1.70.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

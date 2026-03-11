@@ -35,6 +35,10 @@ func Print(a any, w *LineWriter, opt Option) {
 		ExprVar(a, w, opt)
 	case *ast.ExprCall:
 		ExprCall(a, w, opt)
+	case *ast.ExprMap:
+		ExprMap(a, w, opt)
+	case *ast.ExprMapKV:
+		ExprMapKV(a, w, opt)
 	default:
 		panic("mclfmt: unhandled ast " + fmt.Sprintf("%T", a))
 	}
@@ -180,4 +184,26 @@ func ExprCall(a *ast.ExprCall, w *LineWriter, opt Option) {
 		}
 		fmt.Fprint(w, ")")
 	}
+}
+
+func ExprMap(a *ast.ExprMap, w *LineWriter, opt Option) {
+	if opt.DropSpace {
+		io.WriteString(w, "{\n")
+	} else {
+		io.WriteString(w, " {\n")
+	}
+
+	w.Indent++
+	for _, kv := range a.KVs {
+		Print(kv, w, opt)
+		io.WriteString(w, ",\n")
+	}
+	w.Indent--
+	io.WriteString(w, "}\n")
+}
+
+func ExprMapKV(a *ast.ExprMapKV, w *LineWriter, opt Option) {
+	Print(a.Key, w, opt)
+	fmt.Fprintf(w, " =>")
+	Print(a.Val, w, opt)
 }
