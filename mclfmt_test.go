@@ -97,6 +97,14 @@ func TestPrint(t *testing.T) {
 			}
 			`,
 		},
+		{
+			name: "simple function stmt 3",
+			code: `
+			func f3($a int, $b) int {
+				$a + $b
+			}
+			`,
+		},
 	}
 
 	for _, tc := range testcases {

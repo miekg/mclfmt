@@ -7,6 +7,7 @@ import (
 
 	"github.com/purpleidea/mgmt/lang/ast"
 	"github.com/purpleidea/mgmt/lang/funcs/operators"
+	"github.com/purpleidea/mgmt/lang/interfaces"
 )
 
 func Print(a any, w *LineWriter, opt Option) {
@@ -29,7 +30,11 @@ func Print(a any, w *LineWriter, opt Option) {
 		StmtInclude(a, w, opt)
 	case *ast.StmtImport:
 		StmtImport(a, w, opt)
+	case *ast.StmtFunc:
+		StmtFunc(a, w, opt)
 
+	case *ast.ExprFunc:
+		ExprFunc(a, w, opt)
 	case *ast.ExprStr:
 		ExprStr(a, w, opt)
 	case *ast.ExprInt:
@@ -46,6 +51,10 @@ func Print(a any, w *LineWriter, opt Option) {
 		ExprMap(a, w, opt)
 	case *ast.ExprMapKV:
 		ExprMapKV(a, w, opt)
+
+	case *interfaces.Arg:
+		InterfacesArg(a, w, opt)
+
 	default:
 		panic("mclfmt: unhandled ast " + fmt.Sprintf("%T", a))
 	}
@@ -191,6 +200,39 @@ func StmtImport(a *ast.StmtImport, w *LineWriter, opt Option) {
 	io.WriteString(w, "\n")
 }
 
+func StmtFunc(a *ast.StmtFunc, w *LineWriter, opt Option) {
+	fmt.Fprintf(w, "func %s", a.Name)
+	Print(a.Func, w, opt)
+}
+
+func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
+	opt.DropSpace = true
+	io.WriteString(w, "(")
+
+	for i, arg := range a.Args {
+		opt.DropSpace = false
+		if i == 0 {
+			opt.DropSpace = true
+		}
+		fmt.Printf("%T\n", arg)
+		Print(arg, w, opt)
+		if i < len(a.Args)-1 {
+			fmt.Fprint(w, ",")
+		}
+	}
+	fmt.Fprint(w, ")")
+
+	if a.Return != nil {
+		fmt.Fprintf(w, " %s", a.Return)
+	}
+
+	w.Indent++
+	io.WriteString(w, " {\n")
+	Print(a.Body, w, opt)
+	w.Indent--
+	io.WriteString(w, " \n}\n")
+}
+
 func ExprCall(a *ast.ExprCall, w *LineWriter, opt Option) {
 	switch a.Name {
 	case operators.OperatorFuncName:
@@ -242,4 +284,16 @@ func ExprMapKV(a *ast.ExprMapKV, w *LineWriter, opt Option) {
 	Print(a.Key, w, opt)
 	fmt.Fprintf(w, " =>")
 	Print(a.Val, w, opt)
+}
+
+func InterfacesArg(a *interfaces.Arg, w *LineWriter, opt Option) {
+	if opt.DropSpace {
+		fmt.Fprintf(w, "$%s", a.Name)
+	} else {
+		fmt.Fprintf(w, " $%s", a.Name)
+	}
+
+	if a.Type != nil {
+		fmt.Fprintf(w, " %s", a.Type)
+	}
 }
