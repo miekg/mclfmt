@@ -13,10 +13,20 @@ import (
 	"github.com/purpleidea/mgmt/lang/interfaces"
 )
 
+var Import = false
+
 func Print(a any, w *LineWriter, opt Option) {
 	if *flagAst {
 		os.Stdout.Write(bytes.Repeat([]byte("\t"), w.Indent))
 		fmt.Fprintf(os.Stdout, "%T{%[1]s}\n", a)
+	}
+
+	// Extra layout options
+
+	// Import ended
+	if _, ok := a.(*ast.StmtImport); !ok && Import {
+		Import = false
+		w.ForceNewline()
 	}
 
 	switch a := a.(type) {
@@ -38,6 +48,7 @@ func Print(a any, w *LineWriter, opt Option) {
 		StmtInclude(a, w, opt)
 	case *ast.StmtImport:
 		StmtImport(a, w, opt)
+		Import = true
 	case *ast.StmtFunc:
 		StmtFunc(a, w, opt)
 	case *ast.StmtResMeta:
@@ -106,6 +117,7 @@ func StmtBind(a *ast.StmtBind, w *LineWriter, opt Option) {
 }
 
 func StmtRes(a *ast.StmtRes, w *LineWriter, opt Option) {
+	w.ForceNewline()
 	isCollect := ""
 	for _, c := range a.Contents {
 		if _, ok := c.(*ast.StmtResCollect); ok {

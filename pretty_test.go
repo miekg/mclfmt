@@ -52,7 +52,5 @@ func TestPrettyPrint(t *testing.T) {
 }
 func trimSpace(buf []byte) []byte {
 	buf = bytes.ReplaceAll(buf, []byte{' '}, []byte{'_'})
-	////	buf = bytes.ReplaceAll(buf, []byte{'\n'}, nil)
-	//	buf = bytes.ReplaceAll(buf, []byte{'\t'}, nil)
 	return buf
 }

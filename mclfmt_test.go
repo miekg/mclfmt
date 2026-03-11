@@ -116,6 +116,7 @@ func TestPrint(t *testing.T) {
 			$out = iter.map([1,2,3,], $fn)
 			`,
 			pretty: `import "iter"
+
 			$fn = func($x) {
 				$x * $x
 			}

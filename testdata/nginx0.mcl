@@ -1,0 +1,40 @@
+import "golang"
+
+import "os"
+
+pkg "nginx" {
+	state => "installed",
+}
+
+file "/usr/share/nginx/html/index.html" {
+	content => golang.template("This is nginx on {{ . }} managed by mgmt!\n", $hostname),
+	state => "exists",
+
+	Depend => Pkg["nginx"],
+	Before => Svc["nginx"],
+}
+
+file "/etc/nginx/nginx.conf" {
+	content => "# this is nginx.conf
+events {}
+
+http {
+	server {
+		listen 80;
+		location / {
+			root /usr/share/nginx/html;
+			index index.html;
+		}
+	}
+}\n",
+	state => "exists",
+
+	Depend => Pkg["nginx"],
+}
+
+svc "nginx" {
+	state => "running",
+	startup => "enabled",
+
+	Depend => File["/etc/nginx/nginx.conf"],
+}

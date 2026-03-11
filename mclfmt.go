@@ -35,7 +35,7 @@ func main() {
 
 	Print(prog, lw, Option{})
 	if !*flagAst {
-		fmt.Println(lw.String())
+		fmt.Print(lw.String())
 	}
 }
 
@@ -51,11 +51,13 @@ type Option struct {
 type LineWriter struct {
 	Indent int
 	Start  bool // set at start and after newline
+	Force  bool // inhibit multiple forced newlines
 
 	b *bytes.Buffer
 }
 
 func (lw *LineWriter) Write(p []byte) (int, error) {
+	lw.Force = false
 	if lw.Start {
 		if bytes.Equal(p, []byte("\n")) {
 			return 1, nil
@@ -67,6 +69,15 @@ func (lw *LineWriter) Write(p []byte) (int, error) {
 	lw.b.Write(p)
 	lw.Start = bytes.HasSuffix(p, []byte("\n"))
 	return len(p), nil
+}
+
+func (lw *LineWriter) ForceNewline() {
+	if lw.Force {
+		return
+	}
+	lw.b.WriteString("\n")
+	lw.Start = true
+	lw.Force = true
 }
 
 func (lw *LineWriter) String() string {

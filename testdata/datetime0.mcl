@@ -1,0 +1,7 @@
+import "datetime"
+import "fmt"
+
+$unix_epoch_in_seconds = datetime.now()
+file "/tmp/mgmt-datetime" {
+	content => fmt.printf("datetime: %d\n", $unix_epoch_in_seconds),
+}
