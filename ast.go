@@ -41,6 +41,8 @@ func Print(a any, w *LineWriter, opt Option) {
 	}
 
 	switch a := a.(type) {
+	case *ast.StmtComment:
+		StmtComment(a, w, opt)
 	case *ast.StmtProg:
 		StmtProg(a, w, opt)
 	case *ast.StmtRes:
@@ -112,6 +114,11 @@ func Print(a any, w *LineWriter, opt Option) {
 	default:
 		panic("mclfmt: unhandled ast " + fmt.Sprintf("%T", a) + fmt.Sprintf(" : %v", a))
 	}
+}
+
+func StmtComment(a *ast.StmtComment, w *LineWriter, opt Option) {
+	// just print it
+	fmt.Fprintf(w, "#%s\n", a.Value)
 }
 
 func StmtProg(a *ast.StmtProg, w *LineWriter, opt Option) {
