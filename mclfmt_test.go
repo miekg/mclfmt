@@ -89,6 +89,14 @@ func TestPrint(t *testing.T) {
 			import "foo1" as bar
 			`,
 		},
+		{
+			name: "simple function stmt 1",
+			code: `
+			func f1() {
+				42
+			}
+			`,
+		},
 	}
 
 	for _, tc := range testcases {
