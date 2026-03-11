@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/purpleidea/mgmt/lang/ast"
+	"github.com/purpleidea/mgmt/lang/funcs"
 	"github.com/purpleidea/mgmt/lang/funcs/operators"
 	"github.com/purpleidea/mgmt/lang/interfaces"
 )
@@ -361,6 +362,22 @@ func ExprCall(a *ast.ExprCall, w *LineWriter, opt Option) {
 		opt.DropQuote = false
 
 		Print(a.Args[2], w, opt)
+
+	case funcs.LookupDefaultFuncName:
+		// _lookup_default($m, "k2", 99) -> $m["k2"] || 99
+		if !opt.DropSpace {
+			io.WriteString(w, " ")
+		}
+		opt.DropSpace = true
+		Print(a.Args[0], w, opt)
+		io.WriteString(w, "[")
+		Print(a.Args[1], w, opt)
+		io.WriteString(w, "]")
+		if len(a.Args) > 2 {
+			io.WriteString(w, " || ")
+			Print(a.Args[2], w, opt)
+		}
+
 	default:
 		if opt.DropSpace {
 			fmt.Fprintf(w, "%s(", a.Name)
