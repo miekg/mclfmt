@@ -37,6 +37,10 @@ func Print(a any, w *LineWriter, opt Option) {
 		StmtResMeta(a, w, opt)
 	case *ast.StmtResEdge:
 		StmtResEdge(a, w, opt)
+	case *ast.StmtResCollect:
+		StmtResCollect(a, w, opt)
+	case *ast.StmtIf:
+		StmtIf(a, w, opt)
 
 	case *ast.ExprStruct:
 		ExprStruct(a, w, opt)
@@ -91,11 +95,19 @@ func StmtBind(a *ast.StmtBind, w *LineWriter, opt Option) {
 }
 
 func StmtRes(a *ast.StmtRes, w *LineWriter, opt Option) {
+	isCollect := ""
+	for _, c := range a.Contents {
+		if _, ok := c.(*ast.StmtResCollect); ok {
+			isCollect = "collect "
+			break
+		}
+	}
+
 	if opt.DropSpace {
-		fmt.Fprintf(w, "%s", a.Kind)
+		fmt.Fprintf(w, "%s%s", isCollect, a.Kind)
 		opt.DropSpace = false
 	} else {
-		fmt.Fprintf(w, " %s", a.Kind)
+		fmt.Fprintf(w, " %s%s", isCollect, a.Kind)
 	}
 
 	Print(a.Name, w, opt)
@@ -106,6 +118,12 @@ func StmtRes(a *ast.StmtRes, w *LineWriter, opt Option) {
 		if i == 0 {
 			io.WriteString(w, "\n")
 		}
+
+		if _, ok := c.(*ast.StmtResCollect); ok {
+			// skip here, should be handled above. TODO(miek): don't know what this means.
+			continue
+		}
+
 		Print(c, w, opt)
 		io.WriteString(w, ",\n")
 	}
@@ -289,6 +307,40 @@ func StmtResEdge(a *ast.StmtResEdge, w *LineWriter, opt Option) {
 	fmt.Fprintf(w, "%s%s => ", strings.ToUpper(a.Property[:1]), a.Property[1:])
 	opt.DropSpace = true
 	Print(a.EdgeHalf, w, opt)
+}
+
+func StmtResCollect(a *ast.StmtResCollect, w *LineWriter, opt Option) {
+	panic("mclfmt: must not see this ast " + fmt.Sprintf("%T", a) + fmt.Sprintf(" : %v", a))
+}
+
+func StmtIf(a *ast.StmtIf, w *LineWriter, opt Option) {
+	if opt.DropSpace {
+		io.WriteString(w, "if")
+		opt.DropSpace = false
+	} else {
+		io.WriteString(w, " if")
+	}
+
+	Print(a.Condition, w, opt)
+
+	io.WriteString(w, " {\n")
+	w.Indent++
+	Print(a.ThenBranch, w, opt)
+	w.Indent--
+	io.WriteString(w, "\n")
+	io.WriteString(w, "}")
+	if a.ElseBranch == nil {
+		io.WriteString(w, "\n")
+		return
+	}
+
+	io.WriteString(w, " else {\n")
+	w.Indent++
+	Print(a.ElseBranch, w, opt)
+	w.Indent--
+	io.WriteString(w, "\n")
+	io.WriteString(w, "}")
+	io.WriteString(w, "\n")
 }
 
 func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
