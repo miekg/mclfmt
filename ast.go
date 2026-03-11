@@ -41,6 +41,10 @@ func Print(a any, w *LineWriter, opt Option) {
 		StmtResCollect(a, w, opt)
 	case *ast.StmtIf:
 		StmtIf(a, w, opt)
+	case *ast.StmtFor:
+		StmtFor(a, w, opt)
+	case *ast.StmtForKV:
+		StmtForKV(a, w, opt)
 
 	case *ast.ExprStruct:
 		ExprStruct(a, w, opt)
@@ -343,6 +347,44 @@ func StmtIf(a *ast.StmtIf, w *LineWriter, opt Option) {
 	io.WriteString(w, "\n")
 }
 
+func StmtForKV(a *ast.StmtForKV, w *LineWriter, opt Option) {
+	if opt.DropSpace {
+		io.WriteString(w, "forkv ")
+	} else {
+		io.WriteString(w, " forkv ")
+	}
+	opt.DropSpace = false
+
+	fmt.Fprintf(w, "$%s, $%s in", a.Key, a.Val)
+	Print(a.Expr, w, opt)
+
+	io.WriteString(w, " {\n")
+	w.Indent++
+	Print(a.Body, w, opt)
+	w.Indent--
+	io.WriteString(w, "\n")
+	io.WriteString(w, "}\n")
+}
+
+func StmtFor(a *ast.StmtFor, w *LineWriter, opt Option) {
+	if opt.DropSpace {
+		io.WriteString(w, "for ")
+	} else {
+		io.WriteString(w, " for ")
+	}
+	opt.DropSpace = false
+
+	fmt.Fprintf(w, "$%s, $%s in", a.Index, a.Value)
+	Print(a.Expr, w, opt)
+
+	io.WriteString(w, " {\n")
+	w.Indent++
+	Print(a.Body, w, opt)
+	w.Indent--
+	io.WriteString(w, "\n")
+	io.WriteString(w, "}\n")
+}
+
 func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
 	if opt.Func == "" { // No StmtFunc seen
 		if opt.DropSpace {
@@ -377,7 +419,7 @@ func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
 	w.Indent++
 	Print(a.Body, w, opt)
 	w.Indent--
-	io.WriteString(w, "\n") // TODO(miek): adds extra newline in nested functions
+	io.WriteString(w, "\n")
 	io.WriteString(w, "}\n")
 }
 
