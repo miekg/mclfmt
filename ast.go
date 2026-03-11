@@ -208,6 +208,7 @@ func ExprVar(a *ast.ExprVar, w *LineWriter, opt Option) {
 func StmtResField(a *ast.StmtResField, w *LineWriter, opt Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "%s =>", a.Field)
+		opt.DropSpace = false
 	} else {
 		fmt.Fprintf(w, " %s =>", a.Field)
 	}
