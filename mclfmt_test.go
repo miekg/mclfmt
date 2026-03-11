@@ -105,6 +105,14 @@ func TestPrint(t *testing.T) {
 			}
 			`,
 		},
+		{
+			name: "iter.map",
+			code: `
+			import "iter"
+			$fn = func($x) { $x * $x }
+			$out = iter.map([1,2,3,], $fn)
+			`,
+		},
 	}
 
 	for _, tc := range testcases {

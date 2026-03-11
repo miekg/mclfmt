@@ -51,6 +51,8 @@ func Print(a any, w *LineWriter, opt Option) {
 		ExprMap(a, w, opt)
 	case *ast.ExprMapKV:
 		ExprMapKV(a, w, opt)
+	case *ast.ExprList:
+		ExprList(a, w, opt)
 
 	case *interfaces.Arg:
 		InterfacesArg(a, w, opt)
@@ -287,6 +289,24 @@ func ExprMapKV(a *ast.ExprMapKV, w *LineWriter, opt Option) {
 	Print(a.Key, w, opt)
 	fmt.Fprintf(w, " =>")
 	Print(a.Val, w, opt)
+}
+
+func ExprList(a *ast.ExprList, w *LineWriter, opt Option) {
+	if opt.DropSpace {
+		io.WriteString(w, "[")
+	} else {
+		io.WriteString(w, " [")
+	}
+	for i, e := range a.Elements {
+		opt.DropSpace = false
+		if i == 0 {
+			opt.DropSpace = true
+		}
+		Print(e, w, opt)
+		fmt.Fprint(w, ",")
+	}
+
+	io.WriteString(w, "]")
 }
 
 func InterfacesArg(a *interfaces.Arg, w *LineWriter, opt Option) {
