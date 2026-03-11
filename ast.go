@@ -34,6 +34,8 @@ func Print(a any, w *LineWriter, opt Option) {
 		StmtFunc(a, w, opt)
 	case *ast.StmtResMeta:
 		StmtResMeta(a, w, opt)
+	case *ast.StmtResEdge:
+		StmtResEdge(a, w, opt)
 
 	case *ast.ExprStruct:
 		ExprStruct(a, w, opt)
@@ -122,7 +124,11 @@ func StmtEdge(a *ast.StmtEdge, w *LineWriter, opt Option) {
 func StmtEdgeHalf(a *ast.StmtEdgeHalf, w *LineWriter, opt Option) {
 	fmt.Fprintf(w, "%s%s[", strings.ToUpper(a.Kind[:1]), a.Kind[1:])
 	Print(a.Name, w, opt)
-	fmt.Fprintf(w, "].%s", a.SendRecv)
+	if a.SendRecv != "" {
+		fmt.Fprintf(w, "].%s", a.SendRecv)
+	} else {
+		fmt.Fprint(w, "]")
+	}
 }
 
 func ExprStr(a *ast.ExprStr, w *LineWriter, opt Option) {
@@ -231,6 +237,11 @@ func StmtResMeta(a *ast.StmtResMeta, w *LineWriter, opt Option) {
 	}
 
 	Print(a.MetaExpr, w, opt)
+}
+
+func StmtResEdge(a *ast.StmtResEdge, w *LineWriter, opt Option) {
+	fmt.Fprintf(w, "%s%s => ", strings.ToUpper(a.Property[:1]), a.Property[1:])
+	Print(a.EdgeHalf, w, opt)
 }
 
 func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
