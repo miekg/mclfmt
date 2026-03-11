@@ -64,6 +64,31 @@ func TestPrint(t *testing.T) {
 			}
 			`,
 		},
+		{
+			name: "simple dotted class 1",
+			code: `
+			# a dotted identifier only occurs via an imported class
+			class c1 {
+				test "t1" {
+					stringptr => "hello",
+				}
+			}
+			# a dotted identifier is allowed here if it is imported
+			include pkg.c1
+			`,
+		},
+		{
+			name: "simple import 1",
+			code: `
+			import "foo1"
+			`,
+		},
+		{
+			name: "simple import 2",
+			code: `
+			import "foo1" as bar
+			`,
+		},
 	}
 
 	for _, tc := range testcases {

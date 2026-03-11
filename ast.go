@@ -23,6 +23,13 @@ func Print(a any, w *LineWriter, opt Option) {
 		StmtEdge(a, w, opt)
 	case *ast.StmtEdgeHalf:
 		StmtEdgeHalf(a, w, opt)
+	case *ast.StmtClass:
+		StmtClass(a, w, opt)
+	case *ast.StmtInclude:
+		StmtInclude(a, w, opt)
+	case *ast.StmtImport:
+		StmtImport(a, w, opt)
+
 	case *ast.ExprStr:
 		ExprStr(a, w, opt)
 	case *ast.ExprInt:
@@ -153,6 +160,35 @@ func StmtResField(a *ast.StmtResField, w *LineWriter, opt Option) {
 	}
 
 	Print(a.Value, w, opt)
+}
+
+func StmtClass(a *ast.StmtClass, w *LineWriter, opt Option) {
+	if opt.DropSpace {
+		fmt.Fprintf(w, "class %s {\n", a.Name)
+	} else {
+		fmt.Fprintf(w, "class %s {\n", a.Name)
+	}
+
+	w.Indent++
+	// always StmtProg?
+	prog := a.Body.(*ast.StmtProg)
+	for _, b := range prog.Body {
+		Print(b, w, opt)
+	}
+	w.Indent--
+	io.WriteString(w, "}\n")
+}
+
+func StmtInclude(a *ast.StmtInclude, w *LineWriter, opt Option) {
+	fmt.Fprintf(w, "include %s\n", a.Name)
+}
+
+func StmtImport(a *ast.StmtImport, w *LineWriter, opt Option) {
+	fmt.Fprintf(w, "import \"%s\"", a.Name)
+	if a.Alias != "" {
+		fmt.Fprintf(w, " as %s", a.Alias)
+	}
+	io.WriteString(w, "\n")
 }
 
 func ExprCall(a *ast.ExprCall, w *LineWriter, opt Option) {
