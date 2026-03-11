@@ -68,3 +68,7 @@ func (lw *LineWriter) Write(p []byte) (int, error) {
 func (lw *LineWriter) String() string {
 	return lw.b.String()
 }
+
+func (lw *LineWriter) Bytes() []byte {
+	return lw.b.Bytes()
+}

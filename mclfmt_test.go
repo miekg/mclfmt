@@ -181,8 +181,8 @@ func TestPrint(t *testing.T) {
 
 			Print(prog, lw, Option{})
 
-			t.Log("*in*", re.ReplaceAllString(tc.code, ""))
-			t.Log("*out*\n", lw.String())
+			// t.Log("*in*", re.ReplaceAllString(tc.code, ""))
+			// t.Log("*out*\n", lw.String())
 
 			if tc.pretty == "" {
 				return
