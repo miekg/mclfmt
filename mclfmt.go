@@ -43,6 +43,7 @@ type Option struct {
 
 // LineWrtiter is a writer that ignores a single space written as the first
 // character on the line, but will apply any indentation that is required.
+// Subsequent newlines are also suppressed.
 type LineWriter struct {
 	Indent int
 	Start  bool // set at start and after newline
@@ -52,6 +53,10 @@ type LineWriter struct {
 
 func (lw *LineWriter) Write(p []byte) (int, error) {
 	if lw.Start {
+		if bytes.Equal(p, []byte("\n")) {
+			return 1, nil
+		}
+
 		p = bytes.TrimLeft(p, " ")
 		lw.b.Write(bytes.Repeat([]byte("\t"), lw.Indent))
 	}

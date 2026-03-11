@@ -77,22 +77,21 @@ func StmtProg(a *ast.StmtProg, w *LineWriter, opt Option) {
 func StmtBind(a *ast.StmtBind, w *LineWriter, opt Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "$%s =", a.Ident)
+		opt.DropSpace = false
 	} else {
 		fmt.Fprintf(w, " $%s =", a.Ident)
 	}
-	opt.DropSpace = false
 	Print(a.Value, w, opt)
-
-	io.WriteString(w, "\n")
+	io.WriteString(w, "\n") // always closes the line
 }
 
 func StmtRes(a *ast.StmtRes, w *LineWriter, opt Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "%s", a.Kind)
+		opt.DropSpace = false
 	} else {
 		fmt.Fprintf(w, " %s", a.Kind)
 	}
-	opt.DropSpace = false
 
 	Print(a.Name, w, opt)
 
@@ -221,9 +220,17 @@ func StmtFunc(a *ast.StmtFunc, w *LineWriter, opt Option) {
 }
 
 func StmtResMeta(a *ast.StmtResMeta, w *LineWriter, opt Option) {
-	fmt.Fprintf(w, "Meta:%s =>", a.Property)
+	if a.Property != "meta" {
+		fmt.Fprintf(w, "Meta:%s =>", a.Property)
+	} else {
+		fmt.Fprint(w, "Meta =>")
+	}
+	if a.Condition != nil {
+		Print(a.Condition, w, opt)
+		io.WriteString(w, " ?:")
+	}
+
 	Print(a.MetaExpr, w, opt)
-	// Condidition
 }
 
 func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
@@ -278,7 +285,7 @@ func ExprStruct(a *ast.ExprStruct, w *LineWriter, opt Option) {
 		io.WriteString(w, ",\n")
 	}
 	w.Indent--
-	io.WriteString(w, "}\n")
+	io.WriteString(w, "}")
 }
 
 func ExprStructField(a *ast.ExprStructField, w *LineWriter, opt Option) {
@@ -334,7 +341,7 @@ func ExprMap(a *ast.ExprMap, w *LineWriter, opt Option) {
 		io.WriteString(w, ",\n")
 	}
 	w.Indent--
-	io.WriteString(w, "}\n")
+	io.WriteString(w, "}")
 }
 
 func ExprMapKV(a *ast.ExprMapKV, w *LineWriter, opt Option) {

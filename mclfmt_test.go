@@ -7,13 +7,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/purpleidea/mgmt/lang/parser"
 )
 
 func TestPrint(t *testing.T) {
 	testcases := []struct {
-		name string
-		code string
+		name   string
+		code   string
+		pretty string
 	}{
 		{
 			name: "addition",
@@ -113,6 +115,12 @@ func TestPrint(t *testing.T) {
 			$fn = func($x) { $x * $x }
 			$out = iter.map([1,2,3,], $fn)
 			`,
+			pretty: `import "iter"
+			$fn = func($x) {
+				$x * $x
+			}
+			$out = iter.map([1, 2, 3,], $fn)
+			`,
 		},
 		{
 			name: "simple nested function 1",
@@ -159,8 +167,23 @@ func TestPrint(t *testing.T) {
 			lw := &LineWriter{Indent: 0, Start: true, b: &bytes.Buffer{}}
 
 			Print(prog, lw, Option{})
+
 			t.Log("*in*", re.ReplaceAllString(tc.code, ""))
 			t.Log("*out*\n", lw.String())
+
+			if tc.pretty == "" {
+				return
+			}
+
+			tcode := re.ReplaceAllString(tc.pretty, "")
+			got := lw.String()
+			diff := cmp.Diff(tcode, got)
+			if diff != "" {
+				t.Log("*in*", re.ReplaceAllString(tc.code, ""))
+				t.Log("*out*\n", lw.String())
+
+				t.Fatal(diff)
+			}
 		})
 	}
 }
