@@ -155,6 +155,19 @@ func TestPrint(t *testing.T) {
 			}
 			`,
 		},
+		{
+			name: "res edge stmt",
+			code: `
+			tar "/tmp/foo.tar" {
+				inputs => [
+						"/tmp/tar/",
+						"/tmp/standalone",
+				],
+				format => $const.res.tar.format.gnu,
+				Depend => File["/tmp/tar/"], # TODO: add autoedges
+			}
+			`,
+		},
 	}
 
 	re := regexp.MustCompile(`(?m)^[ \t]{3}`)

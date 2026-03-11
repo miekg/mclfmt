@@ -241,6 +241,7 @@ func StmtResMeta(a *ast.StmtResMeta, w *LineWriter, opt Option) {
 
 func StmtResEdge(a *ast.StmtResEdge, w *LineWriter, opt Option) {
 	fmt.Fprintf(w, "%s%s => ", strings.ToUpper(a.Property[:1]), a.Property[1:])
+	opt.DropSpace = true
 	Print(a.EdgeHalf, w, opt)
 }
 
