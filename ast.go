@@ -491,13 +491,17 @@ func ExprStructField(a *ast.ExprStructField, w *LineWriter, opt Option) {
 func ExprCall(a *ast.ExprCall, w *LineWriter, opt Option) {
 	switch a.Name {
 	case operators.OperatorFuncName:
-		Print(a.Args[1], w, opt)
+		if len(a.Args) > 1 {
+			Print(a.Args[1], w, opt)
+		}
 
 		opt.DropQuote = true
 		Print(a.Args[0], w, opt)
 		opt.DropQuote = false
 
-		Print(a.Args[2], w, opt)
+		if len(a.Args) > 2 {
+			Print(a.Args[2], w, opt)
+		}
 
 	case funcs.LookupDefaultFuncName:
 		// _lookup_default($m, "k2", 99) -> $m["k2"] || 99
