@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/purpleidea/mgmt/lang/ast"
@@ -13,34 +14,29 @@ import (
 	"github.com/purpleidea/mgmt/lang/interfaces"
 )
 
-var (
-	Import  = false
-	ResEdge = false
-)
-
-func Print(a any, w *LineWriter, opt Option) {
+func Print(a any, w *LineWriter, opt *Option) {
 	if *flagAst {
 		os.Stdout.Write(bytes.Repeat([]byte("\t"), w.Indent))
 		fmt.Fprintf(os.Stdout, "%T{%[1]s}\n", a)
 	}
 
-	// Extra layout options
-
-	// Import ended
 	switch a.(type) {
-	case *ast.StmtImport:
-		if Import {
-			Import = false
-			w.ForceNewline()
-		}
 	case *ast.StmtResEdge:
 	case *ast.StmtEdgeHalf:
 	case *ast.ExprStr:
 	default:
-		ResEdge = false
+		opt.ResEdge = false
 	}
 
 	switch a := a.(type) {
+	case *ast.StmtImport:
+		for _, i := range opt.Imports {
+			StmtImport(i, w, opt)
+		}
+		if len(opt.Imports) > 0 {
+			w.ForceNewline()
+		}
+		opt.Imports = nil
 	case *ast.StmtComment:
 		StmtComment(a, w, opt)
 	case *ast.StmtProg:
@@ -59,19 +55,16 @@ func Print(a any, w *LineWriter, opt Option) {
 		StmtClass(a, w, opt)
 	case *ast.StmtInclude:
 		StmtInclude(a, w, opt)
-	case *ast.StmtImport:
-		StmtImport(a, w, opt)
-		Import = true
 	case *ast.StmtFunc:
 		StmtFunc(a, w, opt)
 	case *ast.StmtResMeta:
 		StmtResMeta(a, w, opt)
 	case *ast.StmtResEdge:
-		if !ResEdge {
+		if !opt.ResEdge {
 			w.ForceNewline()
 		}
 		StmtResEdge(a, w, opt)
-		ResEdge = true
+		opt.ResEdge = true
 	case *ast.StmtResCollect:
 		StmtResCollect(a, w, opt)
 	case *ast.StmtIf:
@@ -116,18 +109,18 @@ func Print(a any, w *LineWriter, opt Option) {
 	}
 }
 
-func StmtComment(a *ast.StmtComment, w *LineWriter, opt Option) {
+func StmtComment(a *ast.StmtComment, w *LineWriter, opt *Option) {
 	// just print it
 	fmt.Fprintf(w, "#%s\n", a.Value)
 }
 
-func StmtProg(a *ast.StmtProg, w *LineWriter, opt Option) {
+func StmtProg(a *ast.StmtProg, w *LineWriter, opt *Option) {
 	for _, b := range a.Body {
 		Print(b, w, opt)
 	}
 }
 
-func StmtBind(a *ast.StmtBind, w *LineWriter, opt Option) {
+func StmtBind(a *ast.StmtBind, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "$%s =", a.Ident)
 		opt.DropSpace = false
@@ -138,7 +131,7 @@ func StmtBind(a *ast.StmtBind, w *LineWriter, opt Option) {
 	io.WriteString(w, "\n") // always closes the line
 }
 
-func StmtRes(a *ast.StmtRes, w *LineWriter, opt Option) {
+func StmtRes(a *ast.StmtRes, w *LineWriter, opt *Option) {
 	w.ForceNewline()
 	isCollect := ""
 	for _, c := range a.Contents {
@@ -176,7 +169,7 @@ func StmtRes(a *ast.StmtRes, w *LineWriter, opt Option) {
 	io.WriteString(w, "}\n")
 }
 
-func StmtEdge(a *ast.StmtEdge, w *LineWriter, opt Option) {
+func StmtEdge(a *ast.StmtEdge, w *LineWriter, opt *Option) {
 	// Start with new line?
 	fmt.Fprintln(w)
 	for i, e := range a.EdgeHalfList {
@@ -187,7 +180,7 @@ func StmtEdge(a *ast.StmtEdge, w *LineWriter, opt Option) {
 	}
 }
 
-func StmtEdgeHalf(a *ast.StmtEdgeHalf, w *LineWriter, opt Option) {
+func StmtEdgeHalf(a *ast.StmtEdgeHalf, w *LineWriter, opt *Option) {
 	fmt.Fprintf(w, "%s%s[", strings.ToUpper(a.Kind[:1]), a.Kind[1:])
 	Print(a.Name, w, opt)
 	if a.SendRecv != "" {
@@ -197,7 +190,7 @@ func StmtEdgeHalf(a *ast.StmtEdgeHalf, w *LineWriter, opt Option) {
 	}
 }
 
-func ExprStr(a *ast.ExprStr, w *LineWriter, opt Option) {
+func ExprStr(a *ast.ExprStr, w *LineWriter, opt *Option) {
 	if opt.DropQuote {
 		if opt.DropSpace {
 			fmt.Fprintf(w, "%s", a.V)
@@ -214,7 +207,7 @@ func ExprStr(a *ast.ExprStr, w *LineWriter, opt Option) {
 	}
 }
 
-func ExprInt(a *ast.ExprInt, w *LineWriter, opt Option) {
+func ExprInt(a *ast.ExprInt, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "%d", a.V)
 	} else {
@@ -222,7 +215,7 @@ func ExprInt(a *ast.ExprInt, w *LineWriter, opt Option) {
 	}
 }
 
-func ExprFloat(a *ast.ExprFloat, w *LineWriter, opt Option) {
+func ExprFloat(a *ast.ExprFloat, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "%g", a.V)
 	} else {
@@ -230,7 +223,7 @@ func ExprFloat(a *ast.ExprFloat, w *LineWriter, opt Option) {
 	}
 }
 
-func ExprBool(a *ast.ExprBool, w *LineWriter, opt Option) {
+func ExprBool(a *ast.ExprBool, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "%t", a.V)
 	} else {
@@ -238,7 +231,7 @@ func ExprBool(a *ast.ExprBool, w *LineWriter, opt Option) {
 	}
 }
 
-func ExprVar(a *ast.ExprVar, w *LineWriter, opt Option) {
+func ExprVar(a *ast.ExprVar, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "$%s", a.Name)
 	} else {
@@ -246,7 +239,7 @@ func ExprVar(a *ast.ExprVar, w *LineWriter, opt Option) {
 	}
 }
 
-func StmtResField(a *ast.StmtResField, w *LineWriter, opt Option) {
+func StmtResField(a *ast.StmtResField, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "%s =>", a.Field)
 		opt.DropSpace = false
@@ -257,7 +250,7 @@ func StmtResField(a *ast.StmtResField, w *LineWriter, opt Option) {
 	Print(a.Value, w, opt)
 }
 
-func StmtClass(a *ast.StmtClass, w *LineWriter, opt Option) {
+func StmtClass(a *ast.StmtClass, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "class %s", a.Name)
 	} else {
@@ -294,7 +287,7 @@ func StmtClass(a *ast.StmtClass, w *LineWriter, opt Option) {
 	io.WriteString(w, "}\n")
 }
 
-func StmtInclude(a *ast.StmtInclude, w *LineWriter, opt Option) {
+func StmtInclude(a *ast.StmtInclude, w *LineWriter, opt *Option) {
 	fmt.Fprintf(w, "include %s", a.Name)
 	opt.DropSpace = false
 	if a.Args != nil {
@@ -321,7 +314,7 @@ func StmtInclude(a *ast.StmtInclude, w *LineWriter, opt Option) {
 	io.WriteString(w, "\n")
 }
 
-func StmtImport(a *ast.StmtImport, w *LineWriter, opt Option) {
+func StmtImport(a *ast.StmtImport, w *LineWriter, opt *Option) {
 	fmt.Fprintf(w, "import \"%s\"", a.Name)
 	if a.Alias != "" {
 		fmt.Fprintf(w, " as %s", a.Alias)
@@ -329,13 +322,13 @@ func StmtImport(a *ast.StmtImport, w *LineWriter, opt Option) {
 	io.WriteString(w, "\n")
 }
 
-func StmtFunc(a *ast.StmtFunc, w *LineWriter, opt Option) {
+func StmtFunc(a *ast.StmtFunc, w *LineWriter, opt *Option) {
 	fmt.Fprintf(w, "func %s", a.Name)
 	opt.Func = a.Name
 	Print(a.Func, w, opt)
 }
 
-func StmtResMeta(a *ast.StmtResMeta, w *LineWriter, opt Option) {
+func StmtResMeta(a *ast.StmtResMeta, w *LineWriter, opt *Option) {
 	if a.Property != "meta" {
 		fmt.Fprintf(w, "Meta:%s =>", a.Property)
 	} else {
@@ -349,17 +342,17 @@ func StmtResMeta(a *ast.StmtResMeta, w *LineWriter, opt Option) {
 	Print(a.MetaExpr, w, opt)
 }
 
-func StmtResEdge(a *ast.StmtResEdge, w *LineWriter, opt Option) {
+func StmtResEdge(a *ast.StmtResEdge, w *LineWriter, opt *Option) {
 	fmt.Fprintf(w, "%s%s => ", strings.ToUpper(a.Property[:1]), a.Property[1:])
 	opt.DropSpace = true
 	Print(a.EdgeHalf, w, opt)
 }
 
-func StmtResCollect(a *ast.StmtResCollect, w *LineWriter, opt Option) {
+func StmtResCollect(a *ast.StmtResCollect, w *LineWriter, opt *Option) {
 	panic("mclfmt: must not see this ast " + fmt.Sprintf("%T", a) + fmt.Sprintf(" : %v", a))
 }
 
-func StmtIf(a *ast.StmtIf, w *LineWriter, opt Option) {
+func StmtIf(a *ast.StmtIf, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		io.WriteString(w, "if")
 		opt.DropSpace = false
@@ -389,7 +382,7 @@ func StmtIf(a *ast.StmtIf, w *LineWriter, opt Option) {
 	io.WriteString(w, "\n")
 }
 
-func StmtForKV(a *ast.StmtForKV, w *LineWriter, opt Option) {
+func StmtForKV(a *ast.StmtForKV, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		io.WriteString(w, "forkv ")
 	} else {
@@ -408,7 +401,7 @@ func StmtForKV(a *ast.StmtForKV, w *LineWriter, opt Option) {
 	io.WriteString(w, "}\n")
 }
 
-func StmtFor(a *ast.StmtFor, w *LineWriter, opt Option) {
+func StmtFor(a *ast.StmtFor, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		io.WriteString(w, "for ")
 	} else {
@@ -427,7 +420,7 @@ func StmtFor(a *ast.StmtFor, w *LineWriter, opt Option) {
 	io.WriteString(w, "}\n")
 }
 
-func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
+func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt *Option) {
 	if opt.Func == "" { // No StmtFunc seen
 		if opt.DropSpace {
 			io.WriteString(w, "func")
@@ -465,7 +458,7 @@ func ExprFunc(a *ast.ExprFunc, w *LineWriter, opt Option) {
 	io.WriteString(w, "}\n")
 }
 
-func ExprStruct(a *ast.ExprStruct, w *LineWriter, opt Option) {
+func ExprStruct(a *ast.ExprStruct, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		io.WriteString(w, "struct{\n")
 		opt.DropSpace = false
@@ -482,13 +475,13 @@ func ExprStruct(a *ast.ExprStruct, w *LineWriter, opt Option) {
 	io.WriteString(w, "}")
 }
 
-func ExprStructField(a *ast.ExprStructField, w *LineWriter, opt Option) {
+func ExprStructField(a *ast.ExprStructField, w *LineWriter, opt *Option) {
 	fmt.Fprint(w, a.Name)
 	fmt.Fprintf(w, " =>")
 	Print(a.Value, w, opt)
 }
 
-func ExprCall(a *ast.ExprCall, w *LineWriter, opt Option) {
+func ExprCall(a *ast.ExprCall, w *LineWriter, opt *Option) {
 	switch a.Name {
 	case operators.OperatorFuncName:
 		if len(a.Args) > 1 {
@@ -541,7 +534,7 @@ func ExprCall(a *ast.ExprCall, w *LineWriter, opt Option) {
 	}
 }
 
-func ExprMap(a *ast.ExprMap, w *LineWriter, opt Option) {
+func ExprMap(a *ast.ExprMap, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		io.WriteString(w, "{\n")
 		opt.DropSpace = false
@@ -558,13 +551,13 @@ func ExprMap(a *ast.ExprMap, w *LineWriter, opt Option) {
 	io.WriteString(w, "}")
 }
 
-func ExprMapKV(a *ast.ExprMapKV, w *LineWriter, opt Option) {
+func ExprMapKV(a *ast.ExprMapKV, w *LineWriter, opt *Option) {
 	Print(a.Key, w, opt)
 	fmt.Fprintf(w, " =>")
 	Print(a.Val, w, opt)
 }
 
-func ExprList(a *ast.ExprList, w *LineWriter, opt Option) {
+func ExprList(a *ast.ExprList, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		io.WriteString(w, "[")
 		opt.DropSpace = false
@@ -584,7 +577,7 @@ func ExprList(a *ast.ExprList, w *LineWriter, opt Option) {
 	io.WriteString(w, "]")
 }
 
-func ExprIf(a *ast.ExprIf, w *LineWriter, opt Option) {
+func ExprIf(a *ast.ExprIf, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		io.WriteString(w, "if")
 		opt.DropSpace = false
@@ -612,7 +605,7 @@ func ExprIf(a *ast.ExprIf, w *LineWriter, opt Option) {
 	io.WriteString(w, "}")
 }
 
-func InterfacesArg(a *interfaces.Arg, w *LineWriter, opt Option) {
+func InterfacesArg(a *interfaces.Arg, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
 		fmt.Fprintf(w, "$%s", a.Name)
 	} else {
@@ -622,4 +615,17 @@ func InterfacesArg(a *interfaces.Arg, w *LineWriter, opt Option) {
 	if a.Type != nil {
 		fmt.Fprintf(w, " %s", a.Type)
 	}
+}
+
+func Imports(prog *ast.StmtProg) []*ast.StmtImport {
+	imps := []*ast.StmtImport{}
+	for _, i := range prog.Body {
+		if x, ok := i.(*ast.StmtImport); ok {
+			imps = append(imps, x)
+		}
+	}
+	slices.SortFunc(imps, func(a, b *ast.StmtImport) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+	return imps
 }
