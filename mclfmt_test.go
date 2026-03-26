@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/purpleidea/mgmt/lang/ast"
 	"github.com/purpleidea/mgmt/lang/parser"
 )
 
@@ -180,7 +181,9 @@ func TestPrint(t *testing.T) {
 			}
 			lw := &LineWriter{Indent: 0, Start: true, b: &bytes.Buffer{}}
 
-			Print(prog, lw, Option{})
+			opt := &Option{}
+			opt.Imports = Imports(prog.(*ast.StmtProg))
+			Print(prog, lw, opt)
 
 			// t.Log("*in*", re.ReplaceAllString(tc.code, ""))
 			// t.Log("*out*\n", lw.String())

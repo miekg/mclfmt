@@ -33,16 +33,19 @@ func main() {
 	}
 	lw := &LineWriter{Indent: 0, Start: true, b: &bytes.Buffer{}}
 
-	Print(prog, lw, Option{})
+	opt := &Option{}
+	opt.Imports = Imports(prog)
+	Print(prog, lw, opt)
 	if !*flagAst {
 		fmt.Print(lw.String())
 	}
 }
 
 type Option struct {
-	DropQuote bool   // Print ExprStr without quotes.
-	DropSpace bool   // Print any without a starting space.
-	Func      string // When set ExprFunc was called via StmtFunc, if not, then directly via ExprFunc.
+	DropQuote bool              // Print ExprStr without quotes.
+	DropSpace bool              // Print any without a starting space.
+	Func      string            // When set ExprFunc was called via StmtFunc, if not, then directly via ExprFunc.
+	Imports   []*ast.StmtImport // Saved imports to be printed, when we see the _first_ import.
 }
 
 // LineWrtiter is a writer that ignores a single space written as the first

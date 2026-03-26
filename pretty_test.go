@@ -37,7 +37,7 @@ func TestPrettyPrint(t *testing.T) {
 				t.Fatal(err)
 			}
 			lw := &LineWriter{Indent: 0, Start: true, b: &bytes.Buffer{}}
-			Print(prog, lw, Option{})
+			Print(prog, lw, &Option{})
 
 			tr := trimSpace(lw.Bytes())
 			tp := trimSpace(pretty)
