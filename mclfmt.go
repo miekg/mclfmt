@@ -46,6 +46,7 @@ type Option struct {
 	DropSpace bool              // Print any without a starting space.
 	Func      string            // When set ExprFunc was called via StmtFunc, if not, then directly via ExprFunc.
 	Imports   []*ast.StmtImport // Saved imports to be printed, when we see the _first_ import.
+	ResEdge   bool              // Seen ResEdge?
 }
 
 // LineWrtiter is a writer that ignores a single space written as the first

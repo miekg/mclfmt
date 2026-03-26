@@ -14,8 +14,6 @@ import (
 	"github.com/purpleidea/mgmt/lang/interfaces"
 )
 
-var ResEdge = false // TODO(miek): move to Option
-
 func Print(a any, w *LineWriter, opt *Option) {
 	if *flagAst {
 		os.Stdout.Write(bytes.Repeat([]byte("\t"), w.Indent))
@@ -27,7 +25,7 @@ func Print(a any, w *LineWriter, opt *Option) {
 	case *ast.StmtEdgeHalf:
 	case *ast.ExprStr:
 	default:
-		ResEdge = false
+		opt.ResEdge = false
 	}
 
 	switch a := a.(type) {
@@ -62,11 +60,11 @@ func Print(a any, w *LineWriter, opt *Option) {
 	case *ast.StmtResMeta:
 		StmtResMeta(a, w, opt)
 	case *ast.StmtResEdge:
-		if !ResEdge {
+		if !opt.ResEdge {
 			w.ForceNewline()
 		}
 		StmtResEdge(a, w, opt)
-		ResEdge = true
+		opt.ResEdge = true
 	case *ast.StmtResCollect:
 		StmtResCollect(a, w, opt)
 	case *ast.StmtIf:
