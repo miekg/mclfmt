@@ -24,15 +24,15 @@ func Print(a any, w *LineWriter, opt Option) {
 		fmt.Fprintf(os.Stdout, "%T{%[1]s}\n", a)
 	}
 
-	// Extra layout options
+	// Import maybe ended?
+	if _, ok := a.(*ast.StmtImport); !ok && Import {
+		w.ForceNewline()
+		Import = false
+	}
 
-	// Import ended
 	switch a.(type) {
 	case *ast.StmtImport:
-		if Import {
-			Import = false
-			w.ForceNewline()
-		}
+		Import = true
 	case *ast.StmtResEdge:
 	case *ast.StmtEdgeHalf:
 	case *ast.ExprStr:
@@ -61,7 +61,6 @@ func Print(a any, w *LineWriter, opt Option) {
 		StmtInclude(a, w, opt)
 	case *ast.StmtImport:
 		StmtImport(a, w, opt)
-		Import = true
 	case *ast.StmtFunc:
 		StmtFunc(a, w, opt)
 	case *ast.StmtResMeta:
