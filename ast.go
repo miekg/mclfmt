@@ -122,11 +122,17 @@ func StmtProg(a *ast.StmtProg, w *LineWriter, opt *Option) {
 
 func StmtBind(a *ast.StmtBind, w *LineWriter, opt *Option) {
 	if opt.DropSpace {
-		fmt.Fprintf(w, "$%s =", a.Ident)
+		fmt.Fprintf(w, "$%s", a.Ident)
 		opt.DropSpace = false
 	} else {
-		fmt.Fprintf(w, " $%s =", a.Ident)
+		fmt.Fprintf(w, " $%s", a.Ident)
 	}
+	if a.Type != nil {
+		fmt.Fprintf(w, " %s =", a.Type)
+	} else {
+		fmt.Fprint(w, " =")
+	}
+
 	Print(a.Value, w, opt)
 	io.WriteString(w, "\n") // always closes the line
 }
@@ -506,6 +512,25 @@ func ExprCall(a *ast.ExprCall, w *LineWriter, opt *Option) {
 		io.WriteString(w, "[")
 		Print(a.Args[1], w, opt)
 		io.WriteString(w, "]")
+		if len(a.Args) > 2 {
+			io.WriteString(w, " || ")
+			Print(a.Args[2], w, opt)
+		}
+	case funcs.StructLookupOptionalFuncName:
+		fallthrough
+	case funcs.StructLookupFuncName:
+		// $sshkey = _struct_lookup_optional($config, "sshkey", "") -> $config->sshkey || ""
+		if !opt.DropSpace {
+			io.WriteString(w, " ")
+		}
+		opt.DropSpace = true
+		Print(a.Args[0], w, opt)
+		io.WriteString(w, "->")
+		opt.DropQuote = true
+		opt.DropSpace = true
+		Print(a.Args[1], w, opt)
+		opt.DropSpace = false
+		opt.DropQuote = false
 		if len(a.Args) > 2 {
 			io.WriteString(w, " || ")
 			Print(a.Args[2], w, opt)
